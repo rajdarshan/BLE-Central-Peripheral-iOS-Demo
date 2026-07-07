@@ -1,0 +1,21 @@
+echo "📝 Validating commit message format..."
+
+# Check if Commitlint is available in node_modules
+if ! npx commitlint --version >/dev/null 2>&1; then
+  echo "❌ Error: Commitlint is not installed or node_modules is missing."
+  echo "Run 'npm install' in the project root folder."
+  exit 1
+fi
+
+# Pass the temporary commit message file path ($1) to commitlint
+npx --no -- commitlint --edit "$1"
+RESULT=$?
+
+if [ $RESULT -ne 0 ]; then
+  echo "❌ Commit aborted: Invalid message format."
+  echo "Please use Conventional Commits style (e.g., 'feat: add dashboard view' or 'fix(network): handle timeout')."
+  exit 1
+else
+  echo "✅ Commit message format is valid."
+  exit 0
+fi
