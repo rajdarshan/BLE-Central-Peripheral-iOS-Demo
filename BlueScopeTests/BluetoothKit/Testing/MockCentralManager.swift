@@ -23,6 +23,7 @@ final class MockCentralManager: CentralManaging {
     // Recorded calls — assert against these instead of re-implementing CoreBluetooth behavior.
     private(set) var didStartScanning = false
     private(set) var didStopScanning = false
+    private(set) var didTearDown = false
     private(set) var connectedPeripheralID: UUID?
 
     // Configure before the call under test to control what happens.
@@ -64,6 +65,7 @@ final class MockCentralManager: CentralManaging {
     }
 
     func tearDown() {
+        didTearDown = true
         didStartScanning = false
         connectedPeripheralID = nil
         peripheralsSubject.send([])
