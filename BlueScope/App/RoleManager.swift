@@ -11,7 +11,7 @@ final class RoleManager: ObservableObject {
     @Published private(set) var activeRole: AppRole?
     @Published private(set) var isSwitchingRole = false
 
-    private let centralManager: CentralManaging
+    let centralManager: CentralManaging
     let peripheralManager: PeripheralManaging
 
     init(

@@ -2,9 +2,11 @@ import SwiftUI
 
 struct ScanView: View {
     @StateObject private var viewModel: ScanViewModel
+    private let centralManager: CentralManaging
 
     init(centralManager: CentralManaging) {
         _viewModel = StateObject(wrappedValue: ScanViewModel(centralManager: centralManager))
+        self.centralManager = centralManager
     }
 
     var body: some View {
@@ -17,7 +19,7 @@ struct ScanView: View {
                 )
             } else {
                 List(viewModel.peripherals) { peripheral in
-                    NavigationLink(value: peripheral.id) {
+                    NavigationLink(value: peripheral) {
                         PeripheralRowView(peripheral: peripheral)
                     }
                     .simultaneousGesture(TapGesture().onEnded {
@@ -28,10 +30,8 @@ struct ScanView: View {
             }
         }
         .navigationTitle("Scan")
-        .navigationDestination(for: UUID.self) { _ in
-            // Stub: Device Detail feature isn't built yet.
-            Text("Device Detail")
-                .navigationTitle("Device Detail")
+        .navigationDestination(for: DiscoveredPeripheral.self) { peripheral in
+            DeviceDetailView(peripheral: peripheral, centralManager: centralManager)
         }
         .onAppear { viewModel.onAppear() }
         .onDisappear { viewModel.onDisappear() }

@@ -43,8 +43,7 @@ struct RoleSelectionView: View {
             .navigationDestination(for: AppRole.self) { role in
                 switch role {
                 case .central:
-                    Text("Scan")
-                        .navigationTitle("Scan")
+                    ScanView(centralManager: roleManager.centralManager)
                 case .peripheral:
                     AdvertiseView(peripheralManager: roleManager.peripheralManager)
                 }

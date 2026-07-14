@@ -3,7 +3,7 @@ import Foundation
 /// A device seen during scanning. This is an entity — same physical device,
 /// same identity, across repeated advertisements — so equality is by id only
 /// and it's safe to update rssi/lastSeen in place as new adverts arrive.
-struct DiscoveredPeripheral: Identifiable, Equatable {
+struct DiscoveredPeripheral: Identifiable, Equatable, Hashable {
     let id: UUID
     var name: String?
     var rssi: Int
@@ -12,6 +12,10 @@ struct DiscoveredPeripheral: Identifiable, Equatable {
 
     static func == (lhs: DiscoveredPeripheral, rhs: DiscoveredPeripheral) -> Bool {
         lhs.id == rhs.id
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 
     /// Normalized 0.0–1.0 signal strength, for SF Symbols' `variableValue`
