@@ -79,9 +79,11 @@ private struct RoleCard: View {
                     Text(role.title)
                         .font(.bodyText)
                         .foregroundStyle(Color.textPrimary)
+                        .lineLimit(1)
                     Text(role.subtitle)
                         .font(.captionText)
                         .foregroundStyle(Color.textSecondary)
+                        .lineLimit(2, reservesSpace: true)
                 }
 
                 Spacer()
