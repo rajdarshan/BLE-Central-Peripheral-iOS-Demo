@@ -3,9 +3,11 @@ import CoreBluetooth
 
 struct DeviceDetailView: View {
     @StateObject private var viewModel: DeviceDetailViewModel
+    private let centralManager: CentralManaging
 
     init(peripheral: DiscoveredPeripheral, centralManager: CentralManaging) {
         _viewModel = StateObject(wrappedValue: DeviceDetailViewModel(peripheral: peripheral, centralManager: centralManager))
+        self.centralManager = centralManager
     }
 
     var body: some View {
@@ -18,7 +20,13 @@ struct DeviceDetailView: View {
                 ForEach(services) { service in
                     Section(service.name) {
                         ForEach(service.characteristics) { characteristic in
-                            NavigationLink(value: characteristic.id) {
+                            NavigationLink {
+                                CharacteristicDetailView(
+                                    characteristic: characteristic,
+                                    serviceID: service.id,
+                                    centralManager: centralManager
+                                )
+                            } label: {
                                 CharacteristicRowView(characteristic: characteristic)
                             }
                         }
@@ -28,11 +36,6 @@ struct DeviceDetailView: View {
         }
         .listStyle(.insetGrouped)
         .navigationTitle(viewModel.peripheral.name ?? "Unknown Device")
-        .navigationDestination(for: CBUUID.self) { _ in
-            // Stub: Characteristic Detail feature isn't built yet.
-            Text("Characteristic Detail")
-                .navigationTitle("Characteristic Detail")
-        }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Disconnect") {

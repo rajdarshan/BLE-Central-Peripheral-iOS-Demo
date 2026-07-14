@@ -33,7 +33,7 @@ struct CharacteristicValue: Equatable {
     }
 }
 
-enum ValueFormat: String, CaseIterable, Identifiable {
+enum ValueFormat: String, CaseIterable, Identifiable, Hashable {
     case decimal, hex, ascii
     var id: String { rawValue }
 
