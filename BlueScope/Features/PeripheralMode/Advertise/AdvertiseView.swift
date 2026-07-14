@@ -2,9 +2,11 @@ import SwiftUI
 
 struct AdvertiseView: View {
     @StateObject private var viewModel: AdvertiseViewModel
+    private let peripheralManager: PeripheralManaging
 
     init(peripheralManager: PeripheralManaging) {
         _viewModel = StateObject(wrappedValue: AdvertiseViewModel(peripheralManager: peripheralManager))
+        self.peripheralManager = peripheralManager
     }
 
     var body: some View {
@@ -41,7 +43,7 @@ struct AdvertiseView: View {
 
             Section {
                 NavigationLink {
-                    ConnectedCentralsView()
+                    ConnectedCentralsView(peripheralManager: peripheralManager)
                 } label: {
                     Text("Connected Centrals")
                         .font(.bodyText)
