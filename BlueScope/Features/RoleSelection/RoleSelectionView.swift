@@ -3,9 +3,11 @@ import SwiftUI
 struct RoleSelectionView: View {
     @StateObject private var viewModel: RoleSelectionViewModel
     @State private var path = NavigationPath()
+    private let roleManager: RoleManager
 
     init(roleManager: RoleManager) {
         _viewModel = StateObject(wrappedValue: RoleSelectionViewModel(roleManager: roleManager))
+        self.roleManager = roleManager
     }
 
     var body: some View {
@@ -44,8 +46,7 @@ struct RoleSelectionView: View {
                     Text("Scan")
                         .navigationTitle("Scan")
                 case .peripheral:
-                    Text("Advertise")
-                        .navigationTitle("Advertise")
+                    AdvertiseView(peripheralManager: roleManager.peripheralManager)
                 }
             }
         }

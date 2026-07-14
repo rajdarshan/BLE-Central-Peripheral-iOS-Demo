@@ -77,21 +77,6 @@ private struct CharacteristicRowView: View {
     }
 }
 
-private struct PropertyBadge: View {
-    let label: String
-    let background: Color
-    let foreground: Color
-
-    var body: some View {
-        Text(label)
-            .font(.captionText)
-            .foregroundStyle(foreground)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(background, in: Capsule())
-    }
-}
-
 #Preview {
     NavigationStack {
         DeviceDetailView(

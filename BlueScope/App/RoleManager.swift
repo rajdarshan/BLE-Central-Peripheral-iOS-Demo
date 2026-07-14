@@ -12,7 +12,7 @@ final class RoleManager: ObservableObject {
     @Published private(set) var isSwitchingRole = false
 
     private let centralManager: CentralManaging
-    private let peripheralManager: PeripheralManaging
+    let peripheralManager: PeripheralManaging
 
     init(
         centralManager: CentralManaging? = nil,
