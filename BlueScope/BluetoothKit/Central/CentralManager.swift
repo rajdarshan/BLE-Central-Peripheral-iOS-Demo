@@ -15,6 +15,11 @@ final class CentralManager: NSObject, CentralManaging {
     private var manager: CBCentralManager!
 
     private var discovered: [UUID: DiscoveredPeripheral] = [:]
+    // First-seen order, kept stable across updates. Publishing in this order
+    // (rather than re-sorting by RSSI on every advertisement) means existing
+    // rows never swap places as signal strength wobbles — new devices simply
+    // append to the end.
+    private var discoveryOrder: [UUID] = []
     private var cbPeripheralsByID: [UUID: CBPeripheral] = [:]
     private var connectedPeripheral: CBPeripheral?
     private var servicesByID: [CBUUID: DiscoveredService] = [:]
@@ -32,7 +37,18 @@ final class CentralManager: NSObject, CentralManaging {
     private var notifyContinuations: [CBUUID: CheckedContinuation<Void, Error>] = [:]
 
     var statePublisher: AnyPublisher<BluetoothState, Never> { stateSubject.eraseToAnyPublisher() }
-    var discoveredPeripheralsPublisher: AnyPublisher<[DiscoveredPeripheral], Never> { peripheralsSubject.eraseToAnyPublisher() }
+
+    // Scanning with allow-duplicates delivers a didDiscover callback for every
+    // single advertisement (multiple times per second per device), each
+    // triggering a re-sort by RSSI. Publishing every one of those to the UI
+    // makes the scan list constantly reorder itself — throttled here so rows
+    // settle into a stable order instead of flickering.
+    var discoveredPeripheralsPublisher: AnyPublisher<[DiscoveredPeripheral], Never> {
+        peripheralsSubject
+            .throttle(for: .seconds(1), scheduler: DispatchQueue.main, latest: true)
+            .eraseToAnyPublisher()
+    }
+
     var connectionStatePublisher: AnyPublisher<ConnectionState, Never> { connectionStateSubject.eraseToAnyPublisher() }
 
     override init() {
@@ -43,8 +59,9 @@ final class CentralManager: NSObject, CentralManaging {
     func startScanning() {
         guard manager.state == .poweredOn else { return }
         discovered.removeAll()
+        discoveryOrder.removeAll()
         peripheralsSubject.send([])
-        manager.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: true])
+        manager.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: false])
     }
 
     func stopScanning() {
@@ -114,6 +131,7 @@ final class CentralManager: NSObject, CentralManaging {
         }
         connectedPeripheral = nil
         discovered.removeAll()
+        discoveryOrder.removeAll()
         cbPeripheralsByID.removeAll()
         servicesByID.removeAll()
         characteristicsByUUID.removeAll()
@@ -158,8 +176,11 @@ extension CentralManager: CBCentralManagerDelegate {
                 lastSeen: Date(),
                 isConnectable: isConnectable
             )
+            if self.discovered[entry.id] == nil {
+                self.discoveryOrder.append(entry.id)
+            }
             self.discovered[entry.id] = entry
-            self.peripheralsSubject.send(Array(self.discovered.values).sorted { $0.rssi > $1.rssi })
+            self.peripheralsSubject.send(self.discoveryOrder.compactMap { self.discovered[$0] })
         }
     }
 

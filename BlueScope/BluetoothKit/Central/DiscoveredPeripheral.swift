@@ -24,4 +24,38 @@ struct DiscoveredPeripheral: Identifiable, Equatable, Hashable {
         let clamped = min(max(Double(rssi), -100), -30)
         return (clamped + 100) / 70
     }
+
+    /// Coarse device categorization for the scan list's icon. Scan-time
+    /// advertisement data doesn't reliably expose GATT service UUIDs before
+    /// connecting, so this is a best-effort keyword match against the
+    /// advertised name rather than a guarantee.
+    var deviceKind: DeviceKind {
+        guard let name = name?.lowercased() else { return .unknown }
+        if DeviceKind.heartRateKeywords.contains(where: { name.contains($0) }) {
+            return .heartRate
+        }
+        if DeviceKind.genericHardwareKeywords.contains(where: { name.contains($0) }) {
+            return .genericHardware
+        }
+        return .unknown
+    }
+}
+
+enum DeviceKind: Equatable {
+    case heartRate
+    case genericHardware
+    case unknown
+
+    fileprivate static let heartRateKeywords = ["heart", "hrm", "polar", "tickr", "wahoo"]
+    fileprivate static let genericHardwareKeywords = [
+        "esp32", "esp8266", "arduino", "nrf", "stm32", "raspberry", "pico", "board", "devkit"
+    ]
+
+    var systemImage: String {
+        switch self {
+        case .heartRate: return "waveform.path.ecg"
+        case .genericHardware: return "cpu"
+        case .unknown: return "questionmark.circle"
+        }
+    }
 }
