@@ -1,0 +1,71 @@
+# Paths to include during linting
+included:
+  - Source
+  - BlueScope
+
+# Paths to completely ignore (e.g., third-party code)
+excluded:
+  - Pods
+  - Carthage
+  - YourProjectNameTests
+  - YourProjectNameUITests
+  - DerivedData
+
+# Default rules to disable
+disabled_rules:
+  - trailing_whitespace        # Often flags auto-generated code or multi-line strings
+  - nesting                    # Can be restrictive when using nested enums or extensions
+  - trailing_comma             # Multiline parameters input can have trailing comma after each argument
+
+# Optional rules to explicitly enable
+opt_in_rules:
+  - empty_count                # Forces .isEmpty instead of .count == 0
+  - attributes                 # Enforces consistent placement of @objc, @IBOutlet, etc.
+  - closure_end_indentation    # Ensures proper alignment of closing braces
+  - discouraged_object_literal # Enforces programmatic colors/images over UI literals
+  - fatal_error_message        # Requires text explanations inside fatalError()
+
+  # --- RULE CUSTOMIZATIONS ---
+
+attributes:
+  attributes_with_arguments_always_on_line_above: false #Environemnt property wrappers warning variable declaration in same line
+
+# Adjust line length thresholds
+line_length:
+  warning: 150
+  error: 200
+  ignores_urls: true
+  ignores_function_declarations: true
+
+# Adjust file size thresholds
+file_length:
+  warning: 500
+  error: 1000
+
+# Adjust function length thresholds
+function_body_length:
+  warning: 50
+  error: 100
+
+# Custom type naming constraints
+type_name:
+  min_length: 3
+  max_length:
+    warning: 40
+    error: 50
+  allowed_symbols: ["_"]
+
+# Custom variable naming constraints
+variable_name:
+  min_length: 2
+  max_length:
+    warning: 40
+    error: 50
+  excluded:
+    - id
+    - x
+    - y
+
+# Force warnings instead of build failures for specific rules
+force_cast: warning             # Suggests avoiding 'as!' but won't stop the build
+force_try: warning              # Suggests avoiding 'try!' but won't stop the build
