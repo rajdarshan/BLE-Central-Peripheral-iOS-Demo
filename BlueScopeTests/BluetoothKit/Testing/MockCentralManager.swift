@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+@testable import BlueScope
 
 /// A fake conforming to CentralManaging. ScanViewModel / DeviceDetailViewModel
 /// tests inject this instead of the real CentralManager, so tests run on
