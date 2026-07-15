@@ -30,6 +30,15 @@ final class AdvertiseViewModel: ObservableObject {
         peripheralManager.connectedCentralsPublisher
             .map(\.count)
             .assign(to: &$connectedCentralsCount)
+
+        start()
+    }
+
+    deinit {
+        let peripheralManager = peripheralManager
+        Task { @MainActor in
+            peripheralManager.stopAdvertising()
+        }
     }
 
     func start() {

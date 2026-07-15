@@ -69,8 +69,6 @@ struct AdvertiseView: View {
             .padding(16)
             .background(Color.surfaceSecondary)
         }
-        .onAppear { viewModel.start() }
-        .onDisappear { viewModel.stop() }
     }
 }
 
@@ -104,7 +102,7 @@ private struct AdvertisingStatusCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)
-        .background(Color.surfacePrimary, in: RoundedRectangle(cornerRadius: 14))
+        .background(Color.surfaceSecondary, in: RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.borderDefault, lineWidth: 1))
     }
 
@@ -156,7 +154,7 @@ private struct EchoServiceCardView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
-        .background(Color.surfacePrimary, in: RoundedRectangle(cornerRadius: 14))
+        .background(Color.surfaceSecondary, in: RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.borderDefault, lineWidth: 1))
     }
 }
