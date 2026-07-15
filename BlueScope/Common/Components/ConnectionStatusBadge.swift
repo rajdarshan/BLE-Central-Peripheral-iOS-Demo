@@ -1,27 +1,18 @@
 import SwiftUI
 
-/// Renders a ConnectionState as an icon + label pair. Reused wherever a
-/// central's connection lifecycle needs to be shown (currently Device Detail).
+/// Renders a ConnectionState as a text pill, background tinted to the
+/// status color. Reused wherever a central's connection lifecycle needs to
+/// be shown (currently Device Detail).
 struct ConnectionStatusBadge: View {
     let state: ConnectionState
 
     var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: systemImage)
-                .foregroundStyle(color)
-            Text(label)
-                .font(.bodyText)
-                .foregroundStyle(color)
-        }
-    }
-
-    private var systemImage: String {
-        switch state {
-        case .disconnected: return "xmark.circle"
-        case .connecting, .discoveringServices: return "arrow.triangle.2.circlepath"
-        case .connected: return "checkmark.circle.fill"
-        case .failed: return "exclamationmark.triangle.fill"
-        }
+        Text(label)
+            .font(.bodyText)
+            .foregroundStyle(color)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(color.opacity(0.15), in: Capsule())
     }
 
     private var color: Color {

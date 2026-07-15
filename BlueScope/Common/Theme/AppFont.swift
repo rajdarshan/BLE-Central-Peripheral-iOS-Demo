@@ -18,4 +18,6 @@ extension Font {
     static let captionText = Font.system(size: 12, weight: .regular)
     /// Font with size:14 , weight: regular
     static let monospaceValue = Font.system(size: 14, weight: .regular, design: .monospaced) // for hex/UUID display
+    /// Font with size: 34 , weight: semibold, design: rounded — large hero value display
+    static let valueDisplay = Font.system(size: 34, weight: .semibold, design: .rounded)
 }

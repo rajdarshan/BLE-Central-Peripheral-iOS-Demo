@@ -20,6 +20,10 @@ final class DeviceDetailViewModel: ObservableObject {
     }
 
     func onAppear() async {
+        await connect()
+    }
+
+    func connect() async {
         do {
             try await centralManager.connect(to: peripheral.id)
         } catch let error as BLEError {
