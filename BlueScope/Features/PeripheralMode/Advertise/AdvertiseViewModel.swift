@@ -17,12 +17,12 @@ final class AdvertiseViewModel: ObservableObject {
 
     init(
         peripheralManager: PeripheralManaging,
-        localNameStore: LocalNamePersisting = UserDefaultsLocalNameStore()
+        localNameStore: LocalNamePersisting? = nil
     ) {
         self.peripheralManager = peripheralManager
-        self.localNameStore = localNameStore
+        self.localNameStore = localNameStore ?? UserDefaultsLocalNameStore()
 
-        let stored = localNameStore.loadLocalName()?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let stored = self.localNameStore.loadLocalName()?.trimmingCharacters(in: .whitespacesAndNewlines)
         self.localName = (stored?.isEmpty == false) ? stored! : Self.defaultLocalName
 
         peripheralManager.isAdvertisingPublisher.assign(to: &$isAdvertising)
