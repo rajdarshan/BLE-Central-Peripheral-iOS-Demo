@@ -10,55 +10,64 @@ struct AdvertiseView: View {
     }
 
     var body: some View {
-        List {
-            Section {
-                AdvertisingStatusCard(
-                    isAdvertising: viewModel.isAdvertising,
-                    bluetoothState: viewModel.bluetoothState
-                )
-            }
-
-            Section("Local Name") {
-                Text(viewModel.localName)
-                    .font(.monospaceValue)
-                    .foregroundStyle(Color.textPrimary)
-            }
-
-            Section("Echo Service") {
-                HStack {
-                    Text("Echo Characteristic")
-                        .font(.bodyText)
-                        .foregroundStyle(Color.textPrimary)
-
-                    Spacer()
-
-                    HStack(spacing: 6) {
-                        PropertyBadge(label: "R", background: .badgeReadBg, foreground: .badgeReadText)
-                        PropertyBadge(label: "W", background: .badgeWriteBg, foreground: .badgeWriteText)
-                        PropertyBadge(label: "N", background: .badgeNotifyBg, foreground: .badgeNotifyText)
-                    }
-                }
-                .padding(.vertical, 4)
-            }
-
-            Section {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
                 NavigationLink {
                     ConnectedCentralsView(peripheralManager: peripheralManager)
                 } label: {
-                    Text("Connected Centrals")
+                    AdvertisingStatusCard(
+                        isAdvertising: viewModel.isAdvertising,
+                        bluetoothState: viewModel.bluetoothState,
+                        connectedCentralsCount: viewModel.connectedCentralsCount
+                    )
+                }
+                .buttonStyle(.plain)
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Local Name")
+                        .font(.sectionHeader)
+                        .foregroundStyle(Color.textSecondary)
+                        .textCase(.uppercase)
+
+                    TextField("Local Name", text: $viewModel.localName)
                         .font(.bodyText)
                         .foregroundStyle(Color.textPrimary)
+                        .submitLabel(.done)
+                        .onSubmit { viewModel.commitLocalNameChange() }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(12)
+                        .background(Color.surfacePrimary, in: RoundedRectangle(cornerRadius: 10))
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.borderDefault, lineWidth: 1))
+                }
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Service")
+                        .font(.sectionHeader)
+                        .foregroundStyle(Color.textSecondary)
+                        .textCase(.uppercase)
+
+                    EchoServiceCardView()
                 }
             }
+            .padding(16)
         }
-        .listStyle(.insetGrouped)
+        .background(Color.surfaceSecondary)
         .navigationTitle("Advertise")
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Stop") {
-                    viewModel.stop()
+        .navigationSubtitle("Broadcasting as a mock echo peripheral")
+        .safeAreaInset(edge: .bottom) {
+            Group {
+                if viewModel.isAdvertising {
+                    OutlinedButton(title: "Stop advertising", color: .statusError) {
+                        viewModel.stop()
+                    }
+                } else {
+                    OutlinedButton(title: "Start advertising", color: .accentPrimary) {
+                        viewModel.start()
+                    }
                 }
             }
+            .padding(16)
+            .background(Color.surfaceSecondary)
         }
         .onAppear { viewModel.start() }
         .onDisappear { viewModel.stop() }
@@ -66,20 +75,37 @@ struct AdvertiseView: View {
 }
 
 /// Local, feature-scoped subview — not reused outside Advertise. Renders
-/// isAdvertising + bluetoothState as a single status row; intentionally not
-/// ConnectionStatusBadge, which is typed to ConnectionState, not a Bool.
+/// isAdvertising + bluetoothState + connectedCentralsCount as a centered
+/// status card; intentionally not ConnectionStatusBadge, which is typed to
+/// ConnectionState, not a Bool.
 private struct AdvertisingStatusCard: View {
     let isAdvertising: Bool
     let bluetoothState: BluetoothState
+    let connectedCentralsCount: Int
 
     var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: systemImage)
-                .foregroundStyle(color)
-            Text(label)
-                .font(.bodyText)
-                .foregroundStyle(color)
+        VStack(spacing: 8) {
+            Circle()
+                .fill(color.opacity(0.15))
+                .frame(width: 64, height: 64)
+                .overlay(
+                    Image(systemName: systemImage)
+                        .font(.system(size: 22))
+                        .foregroundStyle(color)
+                )
+
+            Text(title)
+                .font(.bodyText.bold())
+                .foregroundStyle(Color.textPrimary)
+
+            Text(caption)
+                .font(.captionText)
+                .foregroundStyle(Color.textSecondary)
         }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
+        .background(Color.surfacePrimary, in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.borderDefault, lineWidth: 1))
     }
 
     private var systemImage: String {
@@ -89,12 +115,49 @@ private struct AdvertisingStatusCard: View {
 
     private var color: Color {
         guard bluetoothState.isUsable else { return .statusError }
-        return isAdvertising ? .statusConnected : .statusWarning
+        return isAdvertising ? .accentPrimary : .statusWarning
     }
 
-    private var label: String {
-        if let message = bluetoothState.userFacingMessage { return message }
-        return isAdvertising ? "Advertising" : "Not advertising"
+    private var title: String {
+        guard bluetoothState.isUsable else { return "Bluetooth Unavailable" }
+        return isAdvertising ? "Advertising" : "Not Advertising"
+    }
+
+    private var caption: String {
+        guard bluetoothState.isUsable else {
+            return bluetoothState.userFacingMessage ?? ""
+        }
+        guard isAdvertising else { return "Tap Start to begin advertising" }
+        return "\(connectedCentralsCount) centrals nearby"
+    }
+}
+
+/// Local, feature-scoped subview — a card for the mock Echo Service showing
+/// its friendly name, short UUID, and supported capability badges. Values
+/// are hardcoded here to match the rest of AdvertiseView, rather than
+/// reaching into BluetoothKit's MockGATTService for display strings.
+private struct EchoServiceCardView: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Echo Service")
+                    .font(.bodyText.bold())
+                    .foregroundStyle(Color.textPrimary)
+                Text("FE01")
+                    .font(.captionText)
+                    .foregroundStyle(Color.textSecondary)
+            }
+
+            HStack(spacing: 6) {
+                PropertyBadge(label: "read", background: .badgeReadBg, foreground: .badgeReadText)
+                PropertyBadge(label: "write", background: .badgeWriteBg, foreground: .badgeWriteText)
+                PropertyBadge(label: "notify", background: .badgeNotifyBg, foreground: .badgeNotifyText)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color.surfacePrimary, in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.borderDefault, lineWidth: 1))
     }
 }
 
