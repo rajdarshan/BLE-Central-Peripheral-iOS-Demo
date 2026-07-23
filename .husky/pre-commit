@@ -1,21 +1,22 @@
 echo "🔍 Checking Swift styling guidelines..."
 
-# Securely grab staged files without letting grep crash the strict shell
-STAGED_SWIFT_FILES=$(git diff --diff-filter=d --cached --name-only | grep "\.swift$" || true)
+# Use -z / -0 so filenames with spaces or special characters survive the pipe intact
+STAGED_SWIFT_FILES=$(git diff --diff-filter=d --cached --name-only -z -- '*.swift')
 
-# If no Swift files are staged, exit safely right now
 if [ -z "$STAGED_SWIFT_FILES" ]; then
   echo "✅ No Swift files staged. Skipping SwiftLint."
   exit 0
 fi
 
-# Run SwiftLint inline. We append "|| true" temporarily so we can capture 
-# the real output and exit code without Husky forcefully killing the script.
 echo "Running validation on staged files..."
-OUTPUT=$(echo "$STAGED_SWIFT_FILES" | xargs swiftlint lint --strict 2>&1)
-RESULT=$?
 
-# Print the raw output from SwiftLint so you can finally see it
+# Neutralize errexit just for this line, so a SwiftLint failure doesn't kill
+# the script before we get a chance to capture/print its output.
+set +e
+OUTPUT=$(printf '%s' "$STAGED_SWIFT_FILES" | xargs -0 swiftlint lint --strict 2>&1)
+RESULT=$?
+set -e
+
 echo "$OUTPUT"
 
 if [ $RESULT -ne 0 ]; then
