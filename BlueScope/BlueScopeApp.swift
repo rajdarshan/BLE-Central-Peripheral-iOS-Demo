@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct BlueScopeApp: App {
+    @StateObject private var roleManager = RoleManager()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RoleSelectionView(roleManager: roleManager)
         }
     }
 }

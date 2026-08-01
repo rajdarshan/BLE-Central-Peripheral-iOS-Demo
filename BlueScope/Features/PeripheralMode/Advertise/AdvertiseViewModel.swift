@@ -1,0 +1,62 @@
+import Foundation
+import Combine
+
+@MainActor
+final class AdvertiseViewModel: ObservableObject {
+
+    static let defaultLocalName = "BlueScope"
+
+    @Published private(set) var isAdvertising = false
+    @Published private(set) var bluetoothState: BluetoothState = .unknown
+    @Published private(set) var connectedCentralsCount = 0
+
+    @Published var localName: String
+
+    private let peripheralManager: PeripheralManaging
+    private let localNameStore: LocalNamePersisting
+
+    init(
+        peripheralManager: PeripheralManaging,
+        localNameStore: LocalNamePersisting? = nil
+    ) {
+        self.peripheralManager = peripheralManager
+        self.localNameStore = localNameStore ?? UserDefaultsLocalNameStore()
+
+        let stored = self.localNameStore.loadLocalName()?.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.localName = (stored?.isEmpty == false) ? stored! : Self.defaultLocalName
+
+        peripheralManager.isAdvertisingPublisher.assign(to: &$isAdvertising)
+        peripheralManager.statePublisher.assign(to: &$bluetoothState)
+        peripheralManager.connectedCentralsPublisher
+            .map(\.count)
+            .assign(to: &$connectedCentralsCount)
+
+        start()
+    }
+
+    deinit {
+        let peripheralManager = peripheralManager
+        Task { @MainActor in
+            peripheralManager.stopAdvertising()
+        }
+    }
+
+    func start() {
+        peripheralManager.startAdvertising(localName: localName)
+    }
+
+    func stop() {
+        peripheralManager.stopAdvertising()
+    }
+
+    func commitLocalNameChange() {
+        let trimmed = localName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let finalName = trimmed.isEmpty ? Self.defaultLocalName : trimmed
+        localName = finalName
+        localNameStore.save(localName: finalName)
+
+        guard isAdvertising else { return }
+        peripheralManager.stopAdvertising()
+        peripheralManager.startAdvertising(localName: finalName)
+    }
+}

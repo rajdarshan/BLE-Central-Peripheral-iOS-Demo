@@ -6,20 +6,61 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		846CB04B300610DA0095F43D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8463D2532FFCDEFD00D24AF2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8463D25A2FFCDEFD00D24AF2;
+			remoteInfo = BlueScope;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		8463D25B2FFCDEFD00D24AF2 /* BlueScope.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BlueScope.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		846CB047300610DA0095F43D /* BlueScopeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlueScopeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		8456F2F03007BE530040B5BD /* Exceptions for "BlueScope" folder in "BlueScope" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 8463D25A2FFCDEFD00D24AF2 /* BlueScope */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8463D25D2FFCDEFD00D24AF2 /* BlueScope */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				8456F2F03007BE530040B5BD /* Exceptions for "BlueScope" folder in "BlueScope" target */,
+			);
 			path = BlueScope;
+			sourceTree = "<group>";
+		};
+		846CB048300610DA0095F43D /* BlueScopeTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = BlueScopeTests;
+			sourceTree = "<group>";
+		};
+		846CB0553006115F0095F43D /* BlueScopeUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = BlueScopeUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		8463D2582FFCDEFD00D24AF2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		846CB044300610DA0095F43D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +74,8 @@
 			isa = PBXGroup;
 			children = (
 				8463D25D2FFCDEFD00D24AF2 /* BlueScope */,
+				846CB048300610DA0095F43D /* BlueScopeTests */,
+				846CB0553006115F0095F43D /* BlueScopeUITests */,
 				8463D25C2FFCDEFD00D24AF2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +84,7 @@
 			isa = PBXGroup;
 			children = (
 				8463D25B2FFCDEFD00D24AF2 /* BlueScope.app */,
+				846CB047300610DA0095F43D /* BlueScopeTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +114,29 @@
 			productReference = 8463D25B2FFCDEFD00D24AF2 /* BlueScope.app */;
 			productType = "com.apple.product-type.application";
 		};
+		846CB046300610DA0095F43D /* BlueScopeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 846CB04F300610DA0095F43D /* Build configuration list for PBXNativeTarget "BlueScopeTests" */;
+			buildPhases = (
+				846CB043300610DA0095F43D /* Sources */,
+				846CB044300610DA0095F43D /* Frameworks */,
+				846CB045300610DA0095F43D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				846CB04C300610DA0095F43D /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				846CB048300610DA0095F43D /* BlueScopeTests */,
+			);
+			name = BlueScopeTests;
+			packageProductDependencies = (
+			);
+			productName = BlueScopeTests;
+			productReference = 846CB047300610DA0095F43D /* BlueScopeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +149,10 @@
 				TargetAttributes = {
 					8463D25A2FFCDEFD00D24AF2 = {
 						CreatedOnToolsVersion = 26.5;
+					};
+					846CB046300610DA0095F43D = {
+						CreatedOnToolsVersion = 26.5;
+						TestTargetID = 8463D25A2FFCDEFD00D24AF2;
 					};
 				};
 			};
@@ -100,12 +171,20 @@
 			projectRoot = "";
 			targets = (
 				8463D25A2FFCDEFD00D24AF2 /* BlueScope */,
+				846CB046300610DA0095F43D /* BlueScopeTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		8463D2592FFCDEFD00D24AF2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		846CB045300610DA0095F43D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +201,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		846CB043300610DA0095F43D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		846CB04C300610DA0095F43D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8463D25A2FFCDEFD00D24AF2 /* BlueScope */;
+			targetProxy = 846CB04B300610DA0095F43D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		8463D2642FFCDEFE00D24AF2 /* Debug */ = {
@@ -185,6 +279,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -242,6 +337,7 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -256,9 +352,10 @@
 				DEVELOPMENT_TEAM = 988C9D2CTW;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BlueScope/Info.plist;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "App requires Bluetooth access to work";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -288,9 +385,10 @@
 				DEVELOPMENT_TEAM = 988C9D2CTW;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BlueScope/Info.plist;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "App requires Bluetooth access to work";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -307,6 +405,48 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		846CB04D300610DA0095F43D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 988C9D2CTW;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rajdarshan.BlueScopeTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BlueScope.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BlueScope";
+			};
+			name = Debug;
+		};
+		846CB04E300610DA0095F43D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 988C9D2CTW;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rajdarshan.BlueScopeTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BlueScope.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BlueScope";
 			};
 			name = Release;
 		};
@@ -327,6 +467,15 @@
 			buildConfigurations = (
 				8463D2672FFCDEFE00D24AF2 /* Debug */,
 				8463D2682FFCDEFE00D24AF2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		846CB04F300610DA0095F43D /* Build configuration list for PBXNativeTarget "BlueScopeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				846CB04D300610DA0095F43D /* Debug */,
+				846CB04E300610DA0095F43D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
