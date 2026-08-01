@@ -5,8 +5,8 @@ import CoreBluetooth
 /// delegate can never drift out of sync with each other — there's exactly
 /// one place that says what this peripheral's GATT shape is.
 enum MockGATTService {
-    static let serviceUUID = CBUUID(string: "FE01")
-    static let echoCharacteristicUUID = CBUUID(string: "FE02")
+    static let serviceUUID = CBUUID(string: "12345678-1234-5678-1234-56789ABCDEF0")
+    static let echoCharacteristicUUID = CBUUID(string: "12345678-1234-5678-1234-56789ABCDEF1")
 
     static func makeCBService() -> CBMutableService {
         let characteristic = CBMutableCharacteristic(
