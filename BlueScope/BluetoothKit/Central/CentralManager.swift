@@ -41,6 +41,12 @@ final class CentralManager: NSObject, CentralManaging {
     private let stateSubject = CurrentValueSubject<BluetoothState, Never>(.unknown)
     private let peripheralsSubject = CurrentValueSubject<[DiscoveredPeripheral], Never>([])
     private let connectionStateSubject = CurrentValueSubject<ConnectionState, Never>(.disconnected)
+    private let restoredConnectionSubject = PassthroughSubject<DiscoveredPeripheral, Never>()
+
+    // Set while a state-restored peripheral is reconnecting, cleared the
+    // moment restoredConnectionSubject fires for it — see willRestoreState
+    // and peripheral(_:didDiscoverCharacteristicsFor:error:) below.
+    private var restoredPeripheralPendingNavigation: UUID?
 
     // One-shot request bridges: CoreBluetooth answers via delegate callback,
     // continuation turns that into a normal `try await` for callers.
@@ -67,6 +73,7 @@ final class CentralManager: NSObject, CentralManaging {
     }
 
     var connectionStatePublisher: AnyPublisher<ConnectionState, Never> { connectionStateSubject.eraseToAnyPublisher() }
+    var restoredConnectionPublisher: AnyPublisher<DiscoveredPeripheral, Never> { restoredConnectionSubject.eraseToAnyPublisher() }
 
     override init() {
         super.init()
@@ -320,6 +327,7 @@ extension CentralManager: CBCentralManagerDelegate {
                 switch peripheral.state {
                 case .connected:
                     self.connectedPeripheral = peripheral
+                    self.restoredPeripheralPendingNavigation = peripheral.identifier
                     self.connectionStateSubject.send(.discoveringServices)
                     do {
                         // willRestoreState can fire before this fresh
@@ -330,6 +338,7 @@ extension CentralManager: CBCentralManagerDelegate {
                         try await self.waitForPoweredOn()
                         peripheral.discoverServices(nil)
                     } catch {
+                        self.restoredPeripheralPendingNavigation = nil
                         self.connectionStateSubject.send(.failed(.serviceDiscoveryFailed(error.localizedDescription)))
                     }
                 case .connecting:
@@ -350,6 +359,7 @@ extension CentralManager: CBPeripheralDelegate {
     nonisolated func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         Task { @MainActor in
             if let error {
+                self.restoredPeripheralPendingNavigation = nil
                 self.connectionStateSubject.send(.failed(.serviceDiscoveryFailed(error.localizedDescription)))
                 return
             }
@@ -385,6 +395,19 @@ extension CentralManager: CBPeripheralDelegate {
             )
             self.servicesByID[service.uuid] = discoveredService
             self.connectionStateSubject.send(.connected(services: Array(self.servicesByID.values)))
+
+            if self.restoredPeripheralPendingNavigation == peripheral.identifier {
+                self.restoredPeripheralPendingNavigation = nil
+                self.restoredConnectionSubject.send(
+                    DiscoveredPeripheral(
+                        id: peripheral.identifier,
+                        name: peripheral.name,
+                        rssi: 0,
+                        lastSeen: Date(),
+                        isConnectable: true
+                    )
+                )
+            }
         }
     }
 

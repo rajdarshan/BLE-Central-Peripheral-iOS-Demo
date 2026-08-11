@@ -15,10 +15,12 @@ final class MockCentralManager: CentralManaging {
     let stateSubject = CurrentValueSubject<BluetoothState, Never>(.poweredOn)
     let peripheralsSubject = CurrentValueSubject<[DiscoveredPeripheral], Never>([])
     let connectionStateSubject = CurrentValueSubject<ConnectionState, Never>(.disconnected)
+    let restoredConnectionSubject = PassthroughSubject<DiscoveredPeripheral, Never>()
 
     var statePublisher: AnyPublisher<BluetoothState, Never> { stateSubject.eraseToAnyPublisher() }
     var discoveredPeripheralsPublisher: AnyPublisher<[DiscoveredPeripheral], Never> { peripheralsSubject.eraseToAnyPublisher() }
     var connectionStatePublisher: AnyPublisher<ConnectionState, Never> { connectionStateSubject.eraseToAnyPublisher() }
+    var restoredConnectionPublisher: AnyPublisher<DiscoveredPeripheral, Never> { restoredConnectionSubject.eraseToAnyPublisher() }
 
     // Recorded calls — assert against these instead of re-implementing CoreBluetooth behavior.
     private(set) var didStartScanning = false
@@ -79,6 +81,15 @@ final class MockCentralManager: CentralManaging {
         connectedPeripheralID = nil
         connectionStateSubject.send(.reconnecting(attempt: 1, maxAttempts: maxAttempts))
         connectionStateSubject.send(.reconnectFailed(.disconnected(nil)))
+    }
+
+    /// Mirrors CentralManager finishing service discovery for a peripheral
+    /// restored via willRestoreState — the signal the UI uses to navigate
+    /// straight to that device's detail screen.
+    func simulateRestoredConnection(_ peripheral: DiscoveredPeripheral) {
+        connectedPeripheralID = peripheral.id
+        connectionStateSubject.send(.connected(services: []))
+        restoredConnectionSubject.send(peripheral)
     }
 
     /// Mirrors a user-initiated disconnect() — no retry.
