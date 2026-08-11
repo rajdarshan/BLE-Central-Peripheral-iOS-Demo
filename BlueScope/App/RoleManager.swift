@@ -18,14 +18,14 @@ final class RoleManager: ObservableObject {
     init(
         centralManager: CentralManaging? = nil,
         peripheralManager: PeripheralManaging? = nil,
-        rolePersisting: RolePersisting = UserDefaultsRolePersisting()
+        rolePersisting: RolePersisting? = nil
     ) {
         // Default arguments are evaluated in a nonisolated context even
         // though init() itself is MainActor, so the real managers are
         // constructed here in the (MainActor) body instead of inline above.
         self.centralManager = centralManager ?? CentralManager()
         self.peripheralManager = peripheralManager ?? PeripheralManager()
-        self.rolePersisting = rolePersisting
+        self.rolePersisting = rolePersisting ?? UserDefaultsRolePersisting()
     }
 
     /// Reactivates whichever role was last active, if any, and none is
