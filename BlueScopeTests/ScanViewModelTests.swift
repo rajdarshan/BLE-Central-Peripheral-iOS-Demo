@@ -107,6 +107,16 @@ final class ScanViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.restoredPeripheral, sample)
     }
 
+    func test_handleDeviceDetailDismissed_disconnectsManager() async throws {
+        let mock = MockCentralManager()
+        let viewModel = ScanViewModel(centralManager: mock)
+        try await mock.connect(to: UUID())
+
+        await viewModel.handleDeviceDetailDismissed()
+
+        XCTAssertNil(mock.connectedPeripheralID)
+    }
+
     func test_scanTimeout_autoStopsAfterDuration() async {
         let mock = MockCentralManager()
         let viewModel = ScanViewModel(centralManager: mock, scanTimeout: .milliseconds(50))

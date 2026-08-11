@@ -114,6 +114,11 @@ struct ScanView: View {
                 selectedPeripheral = restored
             }
         }
+        .onChange(of: selectedPeripheral) { oldValue, newValue in
+            if oldValue != nil, newValue == nil {
+                Task { await viewModel.handleDeviceDetailDismissed() }
+            }
+        }
     }
 }
 

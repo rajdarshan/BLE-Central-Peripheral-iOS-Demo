@@ -57,6 +57,14 @@ final class ScanViewModel: ObservableObject {
         stopScan()
     }
 
+    /// Called when the user has fully left the device-detail navigation
+    /// subtree back to the scan list (selectedPeripheral resets to nil) —
+    /// not when a child screen like CharacteristicDetailView is merely
+    /// pushed on top of it.
+    func handleDeviceDetailDismissed() async {
+        await centralManager.disconnect()
+    }
+
     private func startScan() {
         centralManager.startScanning()
         scanState = .scanning
