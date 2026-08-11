@@ -9,6 +9,7 @@ import SwiftUI
 
 @main
 struct BlueScopeApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var roleManager = RoleManager()
 
     var body: some Scene {

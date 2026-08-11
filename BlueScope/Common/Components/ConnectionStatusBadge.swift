@@ -18,9 +18,9 @@ struct ConnectionStatusBadge: View {
     private var color: Color {
         switch state {
         case .disconnected: return .statusDisconnected
-        case .connecting, .discoveringServices: return .statusWarning
+        case .connecting, .discoveringServices, .reconnecting: return .statusWarning
         case .connected: return .statusConnected
-        case .failed: return .statusError
+        case .failed, .reconnectFailed: return .statusError
         }
     }
 
@@ -31,6 +31,8 @@ struct ConnectionStatusBadge: View {
         case .discoveringServices: return "Discovering services…"
         case .connected: return "Connected"
         case .failed(let error): return error.localizedDescription
+        case .reconnecting(let attempt, let maxAttempts): return "Reconnecting… (\(attempt)/\(maxAttempts))"
+        case .reconnectFailed(let error): return error.localizedDescription
         }
     }
 }
@@ -42,6 +44,8 @@ struct ConnectionStatusBadge: View {
         ConnectionStatusBadge(state: .discoveringServices)
         ConnectionStatusBadge(state: .connected(services: []))
         ConnectionStatusBadge(state: .failed(.connectionTimeout))
+        ConnectionStatusBadge(state: .reconnecting(attempt: 2, maxAttempts: 4))
+        ConnectionStatusBadge(state: .reconnectFailed(.disconnected(nil)))
     }
     .padding()
 }

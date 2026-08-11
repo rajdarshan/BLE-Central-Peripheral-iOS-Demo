@@ -71,4 +71,19 @@ final class MockCentralManager: CentralManaging {
         peripheralsSubject.send([])
         connectionStateSubject.send(.disconnected)
     }
+
+    /// Mirrors the terminal shape of CentralManager's real retry loop
+    /// (didDisconnectPeripheral firing with a non-nil error) without
+    /// reproducing its backoff timing.
+    func simulateUnexpectedDisconnect(maxAttempts: Int = 4) {
+        connectedPeripheralID = nil
+        connectionStateSubject.send(.reconnecting(attempt: 1, maxAttempts: maxAttempts))
+        connectionStateSubject.send(.reconnectFailed(.disconnected(nil)))
+    }
+
+    /// Mirrors a user-initiated disconnect() — no retry.
+    func simulateDeliberateDisconnect() {
+        connectedPeripheralID = nil
+        connectionStateSubject.send(.disconnected)
+    }
 }

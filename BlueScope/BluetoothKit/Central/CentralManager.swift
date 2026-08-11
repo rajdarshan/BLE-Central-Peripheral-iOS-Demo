@@ -9,10 +9,23 @@ import Combine
 /// Delegate methods are `nonisolated` (required by the ObjC protocols) and
 /// hop onto the main actor via `Task { @MainActor in ... }` before touching
 /// any state, so all mutation stays serialized on one actor.
+/// Restoration identifier passed to CBCentralManager so CoreBluetooth can
+/// relaunch the app and hand connected/connecting peripherals back via
+/// willRestoreState after the system terminates it while a connection is
+/// active. Requires the bluetooth-central UIBackgroundMode to be declared.
+private enum RestorationIdentifiers {
+    static let central = "com.rajdarshan.BlueScope.central-manager"
+}
+
 @MainActor
 final class CentralManager: NSObject, CentralManaging {
 
     private var manager: CBCentralManager!
+
+    /// Bounded exponential backoff applied after an unexpected disconnect
+    /// (didDisconnectPeripheral firing with a non-nil error). A deliberate
+    /// disconnect() call never reaches this path.
+    static let maxReconnectAttempts = 4
 
     private var discovered: [UUID: DiscoveredPeripheral] = [:]
     // First-seen order, kept stable across updates. Publishing in this order
@@ -36,6 +49,10 @@ final class CentralManager: NSObject, CentralManaging {
     private var writeContinuations: [CBUUID: CheckedContinuation<Void, Error>] = [:]
     private var notifyContinuations: [CBUUID: CheckedContinuation<Void, Error>] = [:]
 
+    private var reconnectTask: Task<Void, Never>?
+    private var reconnectAttempt = 0
+    private var isDeliberateDisconnect = false
+
     var statePublisher: AnyPublisher<BluetoothState, Never> { stateSubject.eraseToAnyPublisher() }
 
     // Scanning with allow-duplicates delivers a didDiscover callback for every
@@ -53,7 +70,17 @@ final class CentralManager: NSObject, CentralManaging {
 
     override init() {
         super.init()
-        manager = CBCentralManager(delegate: self, queue: nil)
+        manager = CBCentralManager(
+            delegate: self,
+            queue: nil,
+            options: [CBCentralManagerOptionRestoreIdentifierKey: RestorationIdentifiers.central]
+        )
+    }
+
+    /// Delay before reconnect attempt `attempt` (1-indexed): 1, 2, 4, 8s.
+    /// A pure function so the backoff curve is unit-testable without CoreBluetooth.
+    static func backoffDelay(forAttempt attempt: Int) -> Duration {
+        .seconds(pow(2.0, Double(min(attempt, maxReconnectAttempts) - 1)))
     }
 
     func startScanning() {
@@ -80,7 +107,10 @@ final class CentralManager: NSObject, CentralManaging {
     }
 
     func disconnect() async {
+        reconnectTask?.cancel()
+        reconnectTask = nil
         guard let peripheral = connectedPeripheral else { return }
+        isDeliberateDisconnect = true
         manager.cancelPeripheralConnection(peripheral)
         connectedPeripheral = nil
         servicesByID.removeAll()
@@ -126,6 +156,9 @@ final class CentralManager: NSObject, CentralManaging {
 
     func tearDown() {
         stopScanning()
+        reconnectTask?.cancel()
+        reconnectTask = nil
+        reconnectAttempt = 0
         if let peripheral = connectedPeripheral {
             manager.cancelPeripheralConnection(peripheral)
         }
@@ -135,6 +168,33 @@ final class CentralManager: NSObject, CentralManaging {
         cbPeripheralsByID.removeAll()
         servicesByID.removeAll()
         characteristicsByUUID.removeAll()
+        connectionStateSubject.send(.disconnected)
+    }
+
+    private func beginReconnect(to peripheralID: UUID, reason: String) {
+        reconnectAttempt = 0
+        reconnectTask?.cancel()
+        reconnectTask = Task { [weak self] in
+            await self?.attemptReconnect(peripheralID: peripheralID, reason: reason)
+        }
+    }
+
+    private func attemptReconnect(peripheralID: UUID, reason: String) async {
+        while reconnectAttempt < Self.maxReconnectAttempts {
+            reconnectAttempt += 1
+            connectionStateSubject.send(.reconnecting(attempt: reconnectAttempt, maxAttempts: Self.maxReconnectAttempts))
+            try? await Task.sleep(for: Self.backoffDelay(forAttempt: reconnectAttempt))
+            guard !Task.isCancelled else { return }
+            do {
+                try await connect(to: peripheralID)
+                reconnectAttempt = 0
+                return
+            } catch {
+                continue
+            }
+        }
+        guard !Task.isCancelled else { return }
+        connectionStateSubject.send(.reconnectFailed(.disconnected(reason)))
     }
 
     @MainActor
@@ -214,10 +274,42 @@ extension CentralManager: CBCentralManagerDelegate {
         error: Error?
     ) {
         Task { @MainActor in
+            let wasDeliberate = self.isDeliberateDisconnect
+            self.isDeliberateDisconnect = false
             self.connectedPeripheral = nil
             self.servicesByID.removeAll()
             self.characteristicsByUUID.removeAll()
-            self.connectionStateSubject.send(.disconnected)
+
+            if let error, !wasDeliberate {
+                self.beginReconnect(to: peripheral.identifier, reason: error.localizedDescription)
+            } else {
+                self.connectionStateSubject.send(.disconnected)
+            }
+        }
+    }
+
+    // Verified manually only: a genuine cold-relaunch triggered by
+    // CoreBluetooth (kill the app, drop/hold a connection while suspended,
+    // observe the system relaunch it) requires two physical devices and
+    // cannot be exercised in XCTest — CBPeripheral has no public initializer.
+    nonisolated func centralManager(_ central: CBCentralManager, willRestoreState dict: [String: Any]) {
+        Task { @MainActor in
+            guard let peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral] else { return }
+            for peripheral in peripherals {
+                self.cbPeripheralsByID[peripheral.identifier] = peripheral
+                peripheral.delegate = self
+                switch peripheral.state {
+                case .connected:
+                    self.connectedPeripheral = peripheral
+                    self.connectionStateSubject.send(.discoveringServices)
+                    peripheral.discoverServices(nil)
+                case .connecting:
+                    self.connectedPeripheral = peripheral
+                    self.connectionStateSubject.send(.connecting)
+                default:
+                    break
+                }
+            }
         }
     }
 }

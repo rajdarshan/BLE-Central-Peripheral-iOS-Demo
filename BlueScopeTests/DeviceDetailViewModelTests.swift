@@ -49,4 +49,29 @@ final class DeviceDetailViewModelTests: XCTestCase {
         XCTAssertNil(mock.connectedPeripheralID)
         XCTAssertEqual(viewModel.connectionState, .disconnected)
     }
+
+    func test_unexpectedDisconnect_surfacesReconnectingThenReconnectFailed() async {
+        let mock = MockCentralManager()
+        let viewModel = DeviceDetailViewModel(peripheral: samplePeripheral, centralManager: mock)
+        await viewModel.onAppear()
+
+        var observed: [ConnectionState] = []
+        let cancellable = mock.connectionStatePublisher.dropFirst().sink { observed.append($0) }
+
+        mock.simulateUnexpectedDisconnect(maxAttempts: 4)
+        cancellable.cancel()
+
+        XCTAssertEqual(observed, [.reconnecting(attempt: 1, maxAttempts: 4), .reconnectFailed(.disconnected(nil))])
+        XCTAssertEqual(viewModel.connectionState, .reconnectFailed(.disconnected(nil)))
+    }
+
+    func test_deliberateDisconnect_doesNotSurfaceReconnecting() async {
+        let mock = MockCentralManager()
+        let viewModel = DeviceDetailViewModel(peripheral: samplePeripheral, centralManager: mock)
+        await viewModel.onAppear()
+
+        mock.simulateDeliberateDisconnect()
+
+        XCTAssertEqual(viewModel.connectionState, .disconnected)
+    }
 }
