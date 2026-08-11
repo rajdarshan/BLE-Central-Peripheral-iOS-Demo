@@ -197,18 +197,13 @@ _Peripheral mode GIF coming soon._
 
 ## Screenshots
 
-<!--
-Drop screenshots into docs/screenshots/ and reference them here, e.g.:
-
 | Role Selection | Scan | Device Detail |
 |---|---|---|
-| ![Role Selection](docs/screenshots/role-selection.png) | ![Scan](docs/screenshots/scan.png) | ![Device Detail](docs/screenshots/device-detail.png) |
+| <img src="docs/screenshots/role-selection.png" alt="Role Selection" width="500"> | <img src="docs/screenshots/scan.png" alt="Scan" width="500"> | <img src="docs/screenshots/device-detail.png" alt="Device Detail" width="500"> |
 
 | Advertise | Connected Centrals |
 |---|---|
-| ![Advertise](docs/screenshots/advertise.png) | ![Connected Centrals](docs/screenshots/connected-centrals.png) |
--->
-_Screenshots coming soon._
+| <img src="docs/screenshots/advertise.png" alt="Advertise" width="500"> | <img src="docs/screenshots/connected-centrals.png" alt="Connected Centrals" width="500"> |
 
 ## Troubleshooting
  
@@ -218,4 +213,4 @@ _Screenshots coming soon._
 
 ## License
  
-This project is available for learning and demo purposes. Add a license file (e.g., MIT) if you plan to open it up for reuse.
+This project is available for learning and demo purposes.
