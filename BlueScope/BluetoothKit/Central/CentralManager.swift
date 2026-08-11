@@ -92,6 +92,7 @@ final class CentralManager: NSObject, CentralManaging {
     }
 
     func stopScanning() {
+        guard manager.state == .poweredOn else { return }
         manager.stopScan()
     }
 
@@ -100,6 +101,7 @@ final class CentralManager: NSObject, CentralManaging {
             throw BLEError.peripheralNotFound
         }
         connectionStateSubject.send(.connecting)
+        try await waitForPoweredOn()
         try await withCheckedThrowingContinuation { continuation in
             self.connectContinuation = continuation
             self.manager.connect(cbPeripheral, options: nil)
@@ -111,11 +113,28 @@ final class CentralManager: NSObject, CentralManaging {
         reconnectTask = nil
         guard let peripheral = connectedPeripheral else { return }
         isDeliberateDisconnect = true
-        manager.cancelPeripheralConnection(peripheral)
+        if manager.state == .poweredOn {
+            manager.cancelPeripheralConnection(peripheral)
+        }
         connectedPeripheral = nil
         servicesByID.removeAll()
         characteristicsByUUID.removeAll()
         connectionStateSubject.send(.disconnected)
+    }
+
+    /// Suspends until the manager reports `.poweredOn`, so a command issued
+    /// right after a CoreBluetooth-triggered relaunch (state restoration)
+    /// doesn't race the manager's first state update — the only other
+    /// caller of CBCentralManager commands, startScanning(), sidesteps this
+    /// by silently no-op'ing instead, which connect() can't do since it's
+    /// awaited by the reconnect-on-drop loop.
+    private func waitForPoweredOn() async throws {
+        for await state in statePublisher.values {
+            if state == .poweredOn { return }
+            if state == .unauthorized || state == .unsupported {
+                throw BLEError.bluetoothUnavailable(state)
+            }
+        }
     }
 
     func readValue(for characteristicID: String) async throws -> CharacteristicValue {
@@ -159,7 +178,7 @@ final class CentralManager: NSObject, CentralManaging {
         reconnectTask?.cancel()
         reconnectTask = nil
         reconnectAttempt = 0
-        if let peripheral = connectedPeripheral {
+        if manager.state == .poweredOn, let peripheral = connectedPeripheral {
             manager.cancelPeripheralConnection(peripheral)
         }
         connectedPeripheral = nil
@@ -302,7 +321,17 @@ extension CentralManager: CBCentralManagerDelegate {
                 case .connected:
                     self.connectedPeripheral = peripheral
                     self.connectionStateSubject.send(.discoveringServices)
-                    peripheral.discoverServices(nil)
+                    do {
+                        // willRestoreState can fire before this fresh
+                        // CBCentralManager has delivered its first
+                        // centralManagerDidUpdateState(.poweredOn) — issuing
+                        // discoverServices() before that is what produced the
+                        // "API MISUSE: ... powered on state" warning.
+                        try await self.waitForPoweredOn()
+                        peripheral.discoverServices(nil)
+                    } catch {
+                        self.connectionStateSubject.send(.failed(.serviceDiscoveryFailed(error.localizedDescription)))
+                    }
                 case .connecting:
                     self.connectedPeripheral = peripheral
                     self.connectionStateSubject.send(.connecting)

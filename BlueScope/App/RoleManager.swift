@@ -76,8 +76,16 @@ final class RoleManager: ObservableObject {
         rolePersisting.save(role: role)
     }
 
+    /// `statePublisher` is backed by a `CurrentValueSubject` seeded with
+    /// `.unknown`, which replays that placeholder synchronously to a new
+    /// subscriber before the manager's real first state update has arrived.
+    /// Skipping `.unknown` here means we wait for that real update instead
+    /// of mistaking the placeholder for a settled answer.
     private func currentState(of publisher: AnyPublisher<BluetoothState, Never>) async -> BluetoothState {
         var iterator = publisher.values.makeAsyncIterator()
-        return await iterator.next() ?? .unknown
+        while let state = await iterator.next() {
+            if state != .unknown { return state }
+        }
+        return .unknown
     }
 }
