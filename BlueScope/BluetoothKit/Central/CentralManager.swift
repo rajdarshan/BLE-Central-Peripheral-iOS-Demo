@@ -124,6 +124,7 @@ final class CentralManager: NSObject, CentralManaging {
             manager.cancelPeripheralConnection(peripheral)
         }
         connectedPeripheral = nil
+        restoredPeripheralPendingNavigation = nil
         servicesByID.removeAll()
         characteristicsByUUID.removeAll()
         connectionStateSubject.send(.disconnected)
@@ -189,6 +190,7 @@ final class CentralManager: NSObject, CentralManaging {
             manager.cancelPeripheralConnection(peripheral)
         }
         connectedPeripheral = nil
+        restoredPeripheralPendingNavigation = nil
         discovered.removeAll()
         discoveryOrder.removeAll()
         cbPeripheralsByID.removeAll()
@@ -309,6 +311,7 @@ extension CentralManager: CBCentralManagerDelegate {
             if let error, !wasDeliberate {
                 self.beginReconnect(to: peripheral.identifier, reason: error.localizedDescription)
             } else {
+                self.restoredPeripheralPendingNavigation = nil
                 self.connectionStateSubject.send(.disconnected)
             }
         }
@@ -320,33 +323,51 @@ extension CentralManager: CBCentralManagerDelegate {
     // cannot be exercised in XCTest — CBPeripheral has no public initializer.
     nonisolated func centralManager(_ central: CBCentralManager, willRestoreState dict: [String: Any]) {
         Task { @MainActor in
-            guard let peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral] else { return }
+            guard let peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral], !peripherals.isEmpty else {
+                return
+            }
             for peripheral in peripherals {
                 self.cbPeripheralsByID[peripheral.identifier] = peripheral
                 peripheral.delegate = self
-                switch peripheral.state {
-                case .connected:
-                    self.connectedPeripheral = peripheral
-                    self.restoredPeripheralPendingNavigation = peripheral.identifier
-                    self.connectionStateSubject.send(.discoveringServices)
-                    do {
-                        // willRestoreState can fire before this fresh
-                        // CBCentralManager has delivered its first
-                        // centralManagerDidUpdateState(.poweredOn) — issuing
-                        // discoverServices() before that is what produced the
-                        // "API MISUSE: ... powered on state" warning.
-                        try await self.waitForPoweredOn()
-                        peripheral.discoverServices(nil)
-                    } catch {
-                        self.restoredPeripheralPendingNavigation = nil
-                        self.connectionStateSubject.send(.failed(.serviceDiscoveryFailed(error.localizedDescription)))
-                    }
-                case .connecting:
-                    self.connectedPeripheral = peripheral
-                    self.connectionStateSubject.send(.connecting)
-                default:
-                    break
+            }
+
+            // This app's model only ever tracks one `connectedPeripheral`. If
+            // CoreBluetooth hands back more than one live peripheral here —
+            // e.g. because an earlier run was killed without the user ever
+            // hitting Disconnect on it — keep the first as the actual
+            // restoration target and drop the rest, so they stop showing up
+            // as restoration candidates on future launches too.
+            guard let primary = peripherals.first(where: { $0.state == .connected || $0.state == .connecting }) else {
+                return
+            }
+
+            do {
+                // willRestoreState can fire before this fresh CBCentralManager
+                // has delivered its first centralManagerDidUpdateState
+                // (.poweredOn) — issuing any command (discoverServices,
+                // cancelPeripheralConnection) before that is what produced the
+                // "API MISUSE: ... powered on state" warning.
+                try await self.waitForPoweredOn()
+            } catch {
+                return
+            }
+
+            for stale in peripherals where stale.identifier != primary.identifier {
+                if stale.state == .connected || stale.state == .connecting {
+                    self.manager.cancelPeripheralConnection(stale)
                 }
+            }
+
+            self.connectedPeripheral = primary
+            switch primary.state {
+            case .connected:
+                self.restoredPeripheralPendingNavigation = primary.identifier
+                self.connectionStateSubject.send(.discoveringServices)
+                primary.discoverServices(nil)
+            case .connecting:
+                self.connectionStateSubject.send(.connecting)
+            default:
+                break
             }
         }
     }
