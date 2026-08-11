@@ -138,10 +138,10 @@ private struct EchoServiceCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Echo Service")
+                Text("Mock Service")
                     .font(.bodyText.bold())
                     .foregroundStyle(Color.textPrimary)
-                Text("FE01")
+                Text("\(MockGATTService.serviceUUID)")
                     .font(.captionText)
                     .foregroundStyle(Color.textSecondary)
             }

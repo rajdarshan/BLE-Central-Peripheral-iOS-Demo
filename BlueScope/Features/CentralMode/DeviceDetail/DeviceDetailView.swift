@@ -45,13 +45,13 @@ struct DeviceDetailView: View {
                 }
                 .padding(16)
                 .background(Color.surfaceSecondary)
-            case .disconnected, .failed:
+            case .disconnected, .failed, .reconnectFailed:
                 OutlinedButton(title: "Connect", color: .accentPrimary) {
                     Task { await viewModel.connect() }
                 }
                 .padding(16)
                 .background(Color.surfaceSecondary)
-            case .connecting, .discoveringServices:
+            case .connecting, .discoveringServices, .reconnecting:
                 EmptyView()
             }
         }

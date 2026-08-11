@@ -18,6 +18,10 @@ final class ScanViewModel: ObservableObject {
 
     @Published private(set) var peripherals: [DiscoveredPeripheral] = []
     @Published private(set) var scanState: ScanState = .scanning
+    /// Set once when a peripheral restored via CoreBluetooth state restoration
+    /// finishes reconnecting, so the view can navigate straight to its detail
+    /// screen. `didSelect` on a manually-tapped row doesn't touch this.
+    @Published private(set) var restoredPeripheral: DiscoveredPeripheral?
 
     private let centralManager: CentralManaging
     private let scanTimeout: Duration
@@ -27,6 +31,7 @@ final class ScanViewModel: ObservableObject {
         self.centralManager = centralManager
         self.scanTimeout = scanTimeout
         centralManager.discoveredPeripheralsPublisher.assign(to: &$peripherals)
+        centralManager.restoredConnectionPublisher.map { Optional($0) }.assign(to: &$restoredPeripheral)
     }
 
     func onAppear() {
@@ -50,6 +55,14 @@ final class ScanViewModel: ObservableObject {
     /// Detail — stops scanning since only one peripheral matters from here.
     func didSelect(_ peripheral: DiscoveredPeripheral) {
         stopScan()
+    }
+
+    /// Called when the user has fully left the device-detail navigation
+    /// subtree back to the scan list (selectedPeripheral resets to nil) —
+    /// not when a child screen like CharacteristicDetailView is merely
+    /// pushed on top of it.
+    func handleDeviceDetailDismissed() async {
+        await centralManager.disconnect()
     }
 
     private func startScan() {

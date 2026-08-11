@@ -56,4 +56,68 @@ final class RoleManagerTests: XCTestCase {
         cancellable.cancel()
         XCTAssertEqual(observed, [false, true, false])
     }
+
+    func test_activate_persistsRole() async throws {
+        let central = MockCentralManager()
+        let peripheral = MockPeripheralManager()
+        let rolePersisting = MockRolePersisting()
+        let roleManager = RoleManager(centralManager: central, peripheralManager: peripheral, rolePersisting: rolePersisting)
+
+        try await roleManager.activate(.central)
+
+        XCTAssertEqual(rolePersisting.savedRoles, [.central])
+    }
+
+    func test_restorePersistedRoleIfNeeded_activatesSavedRole() async {
+        let central = MockCentralManager()
+        let peripheral = MockPeripheralManager()
+        let rolePersisting = MockRolePersisting()
+        rolePersisting.stubbedLastRole = .central
+        let roleManager = RoleManager(centralManager: central, peripheralManager: peripheral, rolePersisting: rolePersisting)
+
+        let restored = await roleManager.restorePersistedRoleIfNeeded()
+
+        XCTAssertEqual(restored, .central)
+        XCTAssertEqual(roleManager.activeRole, .central)
+    }
+
+    func test_restorePersistedRoleIfNeeded_returnsNilWhenNothingSaved() async {
+        let central = MockCentralManager()
+        let peripheral = MockPeripheralManager()
+        let rolePersisting = MockRolePersisting()
+        let roleManager = RoleManager(centralManager: central, peripheralManager: peripheral, rolePersisting: rolePersisting)
+
+        let restored = await roleManager.restorePersistedRoleIfNeeded()
+
+        XCTAssertNil(restored)
+        XCTAssertNil(roleManager.activeRole)
+    }
+
+    func test_restorePersistedRoleIfNeeded_returnsNilWhenRoleAlreadyActive() async throws {
+        let central = MockCentralManager()
+        let peripheral = MockPeripheralManager()
+        let rolePersisting = MockRolePersisting()
+        rolePersisting.stubbedLastRole = .peripheral
+        let roleManager = RoleManager(centralManager: central, peripheralManager: peripheral, rolePersisting: rolePersisting)
+        try await roleManager.activate(.central)
+
+        let restored = await roleManager.restorePersistedRoleIfNeeded()
+
+        XCTAssertNil(restored)
+        XCTAssertEqual(roleManager.activeRole, .central)
+    }
+
+    func test_restorePersistedRoleIfNeeded_returnsNilWhenBluetoothUnusable() async {
+        let central = MockCentralManager()
+        let peripheral = MockPeripheralManager()
+        central.stateSubject.send(.poweredOff)
+        let rolePersisting = MockRolePersisting()
+        rolePersisting.stubbedLastRole = .central
+        let roleManager = RoleManager(centralManager: central, peripheralManager: peripheral, rolePersisting: rolePersisting)
+
+        let restored = await roleManager.restorePersistedRoleIfNeeded()
+
+        XCTAssertNil(restored)
+        XCTAssertNil(roleManager.activeRole)
+    }
 }

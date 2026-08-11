@@ -48,6 +48,11 @@ struct RoleSelectionView: View {
                     AdvertiseView(peripheralManager: roleManager.peripheralManager)
                 }
             }
+            .task {
+                if let role = await viewModel.restoreIfNeeded() {
+                    path.append(role)
+                }
+            }
         }
     }
 

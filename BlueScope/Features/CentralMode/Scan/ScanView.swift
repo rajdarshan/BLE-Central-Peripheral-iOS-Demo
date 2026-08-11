@@ -109,6 +109,16 @@ struct ScanView: View {
         }
         .onAppear { viewModel.onAppear() }
         .onDisappear { viewModel.onDisappear() }
+        .onChange(of: viewModel.restoredPeripheral) { _, restored in
+            if let restored {
+                selectedPeripheral = restored
+            }
+        }
+        .onChange(of: selectedPeripheral) { oldValue, newValue in
+            if oldValue != nil, newValue == nil {
+                Task { await viewModel.handleDeviceDetailDismissed() }
+            }
+        }
     }
 }
 
