@@ -25,7 +25,7 @@ Every BLE action and state change is captured in an in-app **log**, so you can f
 - Respond to **read** and **write** requests from connected centrals
 - **Notify** updated values to all subscribed centrals at once
 
-## Apps Objective and Goal
+## Apps Objective
 
 CoreBluetooth's delegate-based API is one of the harder Apple frameworks to wrap cleanly: it's callback-heavy, stateful, and easy to leak into every layer of an app if you're not disciplined about it. BlueScope is a deliberate exercise in **not** doing that — every CoreBluetooth type is translated into a plain Swift domain type at a single boundary, and everything above that boundary (view models, views, tests) only ever sees protocols and value types.
 
