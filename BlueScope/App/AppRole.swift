@@ -1,6 +1,6 @@
 /// Which BLE role the app is currently acting as. Exactly one is active at
 /// a time — RoleManager owns the switch between them.
-enum AppRole: Hashable {
+enum AppRole: String, Hashable {
     case central
     case peripheral
 

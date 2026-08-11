@@ -35,4 +35,10 @@ final class RoleSelectionViewModel: ObservableObject {
             return false
         }
     }
+
+    /// Reactivates the last-active role on launch, if any. Returns the
+    /// restored role so the view can navigate straight into it.
+    func restoreIfNeeded() async -> AppRole? {
+        await roleManager.restorePersistedRoleIfNeeded()
+    }
 }

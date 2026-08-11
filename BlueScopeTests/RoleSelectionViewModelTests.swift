@@ -31,4 +31,18 @@ final class RoleSelectionViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.errorMessage, BLEError.bluetoothUnavailable(.poweredOff).localizedDescription)
         XCTAssertNil(viewModel.selectedRole)
     }
+
+    func test_restoreIfNeeded_forwardsToRoleManager() async {
+        let central = MockCentralManager()
+        let peripheral = MockPeripheralManager()
+        let rolePersisting = MockRolePersisting()
+        rolePersisting.stubbedLastRole = .central
+        let roleManager = RoleManager(centralManager: central, peripheralManager: peripheral, rolePersisting: rolePersisting)
+        let viewModel = RoleSelectionViewModel(roleManager: roleManager)
+
+        let restored = await viewModel.restoreIfNeeded()
+
+        XCTAssertEqual(restored, .central)
+        XCTAssertEqual(viewModel.selectedRole, .central)
+    }
 }

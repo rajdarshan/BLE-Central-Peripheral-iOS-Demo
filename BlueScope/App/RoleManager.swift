@@ -13,16 +13,33 @@ final class RoleManager: ObservableObject {
 
     let centralManager: CentralManaging
     let peripheralManager: PeripheralManaging
+    private let rolePersisting: RolePersisting
 
     init(
         centralManager: CentralManaging? = nil,
-        peripheralManager: PeripheralManaging? = nil
+        peripheralManager: PeripheralManaging? = nil,
+        rolePersisting: RolePersisting = UserDefaultsRolePersisting()
     ) {
         // Default arguments are evaluated in a nonisolated context even
         // though init() itself is MainActor, so the real managers are
         // constructed here in the (MainActor) body instead of inline above.
         self.centralManager = centralManager ?? CentralManager()
         self.peripheralManager = peripheralManager ?? PeripheralManager()
+        self.rolePersisting = rolePersisting
+    }
+
+    /// Reactivates whichever role was last active, if any, and none is
+    /// currently active. Returns the restored role on success so the caller
+    /// can navigate straight into it, or nil if there was nothing to
+    /// restore or the target role's Bluetooth isn't currently usable.
+    func restorePersistedRoleIfNeeded() async -> AppRole? {
+        guard activeRole == nil, let saved = rolePersisting.loadLastRole() else { return nil }
+        do {
+            try await activate(saved)
+            return saved
+        } catch {
+            return nil
+        }
     }
 
     /// Tears down whichever manager is currently active, then activates `role`.
@@ -56,6 +73,7 @@ final class RoleManager: ObservableObject {
         }
 
         activeRole = role
+        rolePersisting.save(role: role)
     }
 
     private func currentState(of publisher: AnyPublisher<BluetoothState, Never>) async -> BluetoothState {
