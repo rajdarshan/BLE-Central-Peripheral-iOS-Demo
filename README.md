@@ -24,9 +24,6 @@ Every BLE action and state change is captured in an in-app **log**, so you can f
 - Accept connections from multiple centrals simultaneously
 - Respond to **read** and **write** requests from connected centrals
 - **Notify** updated values to all subscribed centrals at once
-### Activity Log
-- Chronological list of all BLE actions in both modes
-- Status information: Bluetooth power state, connection events, subscription changes, errors
 
 ## Apps Objective and Goal
 
